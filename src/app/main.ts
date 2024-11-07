@@ -6,11 +6,14 @@ if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
+let mainWindow: BrowserWindow
+let appIsQuitting = false
+
 const createWindow = () => {
 
   const mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 400,
+    height: 300,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
@@ -36,13 +39,16 @@ const createWindow = () => {
 
   // Hide the window instead of closing it.
   mainWindow.on('close', (event) => {
-    event.preventDefault();
-    mainWindow.hide();
+    if (!appIsQuitting) {
+      event.preventDefault();
+      mainWindow.hide();
+    }
   });
-
-  // Open the DevTools.
-  mainWindow.webContents.openDevTools();
 };
+
+app.on("before-quit", () => {
+  appIsQuitting = true
+})
 
 app.on('ready', () => {
   createWindow()
