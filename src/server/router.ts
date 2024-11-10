@@ -1,22 +1,24 @@
-import { initTRPC } from '@trpc/server';
+import { publicProcedures, router } from './trpc'
 import { z } from 'zod';
 
-export const t = initTRPC.create();
 
 const note = z.object({ title: z.string(), body: z.string() })
 type Note = z.infer<typeof note>
 
 const notes: Note[] = []
 
-export const appRouter = t.router({
-    getNotes: t.procedure.query((opts) => {
+export const appRouter = router({
+    getNotes: publicProcedures.query(async (opts) => {
+        console.log("BEFORE GETTING")
+        const ns = await opts.ctx.dbClient.findOne({ title: 'Hamlet' })
+        console.log(ns)
         console.log("GETTING THE NOTES!!")
-        return notes;
+        return ns;
     }),
-    addNote: t.procedure
+    addNote: publicProcedures
         .input(note)
         .mutation(async (opts) => {
-            notes.push(opts.input)
+            opts.ctx.dbClient.insertOne(opts.input)
             return opts.input
         }),
 });
